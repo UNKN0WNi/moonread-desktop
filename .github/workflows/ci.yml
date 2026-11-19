@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 语法检查
+        run: |
+          python -m py_compile src/app.py src/epub.py
+      - name: 生成测试 EPUB 并验证解析
+        run: |
+          python - <<'PY'
+          import sys, zipfile, tempfile, os
+          sys.path.insert(0, 'src')
+          from epub import parse_epub
+          opf = '''<?xml version="1.0"?>
+          <package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+            <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+              <dc:title>CI 测试书</dc:title><dc:creator>测试</dc:creator>
+            </metadata>
+            <manifest>
+              <item id="c1" href="c1.xhtml" media-type="application/xhtml+xml"/>
+              <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+            </manifest>
+            <spine toc="ncx"><itemref idref="c1"/></spine>
+          </package>'''
+          c1 = '''<html xmlns="http://www.w3.org/1999/xhtml"><head><title>x</title></head>
+          <body><h1>第一章</h1><p>正文段落一。</p><p>正文段落二。</p></body></html>'''
+          ncx = '''<?xml version="1.0"?>
+          <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+            <navMap><navPoint id="n1" playOrder="1">
+              <navLabel><text>第一章</text></navLabel><content src="c1.xhtml"/>
+            </navPoint></navMap>
+          </ncx>'''
+          d = tempfile.mkdtemp()
+          p = os.path.join(d, 'test.epub')
+          with zipfile.ZipFile(p, 'w') as z:
+            z.writestr('mimetype', 'application/epub+zip')
+            z.writestr('OEBPS/content.opf', opf)
+            z.writestr('OEBPS/c1.xhtml', c1)
+            z.writestr('OEBPS/toc.ncx', ncx)
+          b = parse_epub(p)
+          assert b['title'] == 'CI 测试书', b
+          assert b['author'] == '测试', b
+          assert len(b['chapters']) == 1, b
+          assert b['chapters'][0]['title'] == '第一章', b
+          assert len(b['chapters'][0]['paras']) == 2, b
+          assert len(b['toc']) == 1 and b['toc'][0]['idx'] == 0, b
+          print('解析自检通过：', b['title'], b['chapters'][0]['title'])
+          PY
+        shell: bash

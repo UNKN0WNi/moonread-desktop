@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>MoonRead</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="bar">
+  <button class="btn primary" id="openBtn">打开 EPUB</button>
+  <div id="meta">
+    <div class="t" id="bookTitle">MoonRead</div>
+    <div class="a" id="bookAuthor">把 EPUB 拖进窗口，或点左上角打开</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn" id="tocBtn" title="显示/隐藏目录">目录</button>
+  <button class="btn" id="smaller" title="减小字号">A−</button>
+  <button class="btn" id="bigger" title="增大字号">A＋</button>
+  <button class="btn" id="night" title="夜间模式">夜间</button>
+</div>
+<div id="main">
+  <aside id="side"><div class="side-h">目 录</div><div id="tocList"></div></aside>
+  <div id="read">
+    <article id="page">
+      <div class="empty" id="empty">
+        <div class="logo">月</div>
+        <h1>MoonRead</h1>
+        <p>轻量的 Windows EPUB 阅读器</p>
+        <button class="btn primary big" id="emptyOpen">选择一本 EPUB</button>
+        <p class="hint">也可以把 .epub 文件直接拖进这个窗口</p>
+      </div>
+    </article>
+  </div>
+</div>
+<div id="nav">
+  <button class="btn" id="prev">← 上一章</button>
+  <span class="pos" id="pos"></span>
+  <button class="btn" id="next">下一章 →</button>
+</div>
+<div id="dropmask"><div>松开以打开 EPUB</div></div>
+<script src="app.js"></script>
+</body>
+</html>
